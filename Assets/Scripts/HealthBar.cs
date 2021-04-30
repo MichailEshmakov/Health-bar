@@ -15,7 +15,6 @@ public class HealthBar : MonoBehaviour
     private float _neededValue;
     private bool _isValueChanging = false;
     private Color _fillColor;
-    private UnityAction _onHealthChanged;
 
     private void Awake()
     {
@@ -30,19 +29,17 @@ public class HealthBar : MonoBehaviour
             Debug.LogError("Fill of health bar is not specified");
         }
 
-        _onHealthChanged = () => ChangeNeededValue();
         if (_player == null)
         {
             Debug.LogError("Player of health bar is not specified");
         }
         else
         {
-            _player.OnHealthChanged.AddListener(_onHealthChanged);
-            ChangeNeededValue();
+            ChangeValue();
         }
     }
 
-    private void ChangeNeededValue()
+    public void ChangeValue()
     {
         if (_player != null)
         {
@@ -76,10 +73,5 @@ public class HealthBar : MonoBehaviour
         }
 
         _isValueChanging = false;
-    }
-
-    private void OnDestroy()
-    {
-        _player.OnHealthChanged.RemoveListener(_onHealthChanged);
     }
 }
