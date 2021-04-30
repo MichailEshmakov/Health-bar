@@ -41,7 +41,7 @@ public class HealthBar : MonoBehaviour
 
     public void ChangeValue()
     {
-        if (_player != null)
+        if (_player != null && _slider != null)
         {
             _neededValue = _player.Health / _player.MaxHealth * _slider.maxValue;
             _neededValue = Mathf.Clamp(_neededValue, _slider.minValue, _slider.maxValue);
