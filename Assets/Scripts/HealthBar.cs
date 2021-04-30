@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(Slider))]
@@ -8,16 +9,17 @@ public class HealthBar : MonoBehaviour
 {
     [SerializeField] private float _changingSpeed;
     [SerializeField] private Image _fill;
+    [SerializeField] private Player _player;
 
     private Slider _slider;
-    private float _value;
+    private float _neededValue;
     private bool _isValueChanging = false;
     private Color _fillColor;
+    private UnityAction _onHealthChanged;
 
     private void Awake()
     {
         _slider = GetComponent<Slider>();
-        _value = _slider.value;
 
         if (_fill != null)
         {
@@ -28,30 +30,43 @@ public class HealthBar : MonoBehaviour
             Debug.LogError("Fill of health bar is not specified");
         }
 
-    }
-
-    public void ChangeValue(float delta)
-    {
-        _value += delta;
-        _value = Mathf.Clamp(_value, _slider.minValue, _slider.maxValue);
-        if (_isValueChanging == false)
+        _onHealthChanged = () => ChangeNeededValue();
+        if (_player == null)
         {
-            StartCoroutine(ChangeValue());
+            Debug.LogError("Player of health bar is not specified");
+        }
+        else
+        {
+            _player.OnHealthChanged.AddListener(_onHealthChanged);
+            ChangeNeededValue();
         }
     }
 
-    private IEnumerator ChangeValue()
+    private void ChangeNeededValue()
+    {
+        if (_player != null)
+        {
+            _neededValue = _player.Health / _player.MaxHealth * _slider.maxValue;
+            _neededValue = Mathf.Clamp(_neededValue, _slider.minValue, _slider.maxValue);
+            if (_isValueChanging == false)
+            {
+                StartCoroutine(ChangeSliderValue());
+            }
+        }
+    }
+
+    private IEnumerator ChangeSliderValue()
     {
         _isValueChanging = true;
 
-        if (_value > 0 && _fill != null)
+        if (_neededValue > 0 && _fill != null)
         {
             _fill.color = _fillColor;
         }
 
-        while (_slider.value != _value)
+        while (_slider.value != _neededValue)
         {
-            _slider.value = Mathf.MoveTowards(_slider.value, _value, _changingSpeed * Time.deltaTime);
+            _slider.value = Mathf.MoveTowards(_slider.value, _neededValue, _changingSpeed * Time.deltaTime);
             yield return null;
         }
 
@@ -61,5 +76,10 @@ public class HealthBar : MonoBehaviour
         }
 
         _isValueChanging = false;
+    }
+
+    private void OnDestroy()
+    {
+        _player.OnHealthChanged.RemoveListener(_onHealthChanged);
     }
 }
